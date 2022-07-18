@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: droneserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: droneserver
+  template:
+    metadata:
+      labels:
+        app: droneserver
+    spec:
+      containers:
+      - name: drone-server
+        image: drone/drone:2.12.1
+        imagePullPolicy: Always
+        env:
+        - name: "DRONE_TLS_AUTOCERT"
+          value: "true"
+        - name: "DRONE_USER_CREATE"
+          value: "username:paulpbrandon,admin:true"
+        - name: "DRONE_GITHUB_CLIENT_ID"
+          valueFrom:
+            secretKeyRef:
+              name: drone-secrets
+              key: githubclientid
+        - name: "DRONE_GITHUB_CLIENT_SECRET"
+          valueFrom:
+            secretKeyRef:
+              name: drone-secrets
+              key: githubclientsecret
+        - name: "DRONE_SERVER_PROTO"
+          value: "https"
+        - name: "DRONE_SERVER_HOST"
+          value: "nimblepaultestdrone.uksouth.cloudapp.azure.com"
+        - name: "DRONE_RPC_SECRET"
+          valueFrom:
+            secretKeyRef:
+              name: drone-secrets
+              key: rpcsecret
+        volumeMounts:
+        - mountPath: /var/lib/drone
+          name: drone-volume
+        - mountPath: /data
+          name: drone-volume
+      volumes:
+      - name: drone-volume
+        persistentVolumeClaim:
+          claimName: drone-disk-claim
