@@ -1,0 +1,23 @@
+kind: pipeline
+type: kubernetes
+name: default
+
+steps:
+- name: test
+  image: node
+  commands:
+  - npm install
+  - npm test
+- name: docker  
+  image: plugins/docker
+  settings:
+    registry: paulsregistry80.azurecr.io
+    username:
+      from_secret: acr_user
+    password:
+      from_secret: acr_pass
+    repo: paulsregistry80.azurecr.io/node-test
+    auto_tag: true
+  when:
+    event:
+     - tag
