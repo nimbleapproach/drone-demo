@@ -78,7 +78,7 @@ Do this to allow drone to log into your container registry and be able to push t
 1. Run test on any event to any branch (commit etc.)
 2. If the event was a tag event run docker build and push the image to ACR (note it uses auto_tag which will generate the tag from the github tag)
 
-*We'll likely want to look at different pipeline for different branches, environments and so on*
+*We'll likely want to look at different pipeline for different branches, environments and so on. I was interested in using GitHub environments to set deployment targets, however it requires an Enterprise account*
 
 ## Things to look at
 ### TLS certificates
