@@ -43,7 +43,7 @@ We'll use kubernetes secrets to store sensitive information (like the OAuth clie
 - Install the directory to Argo, assuming the argo-cli is installed you can use the following command:
 - `argocd app create droneserver --repo git@github.com:youruser/yourrepo.git --path server --dest-server https://kubernetes.default.svc --dest-namespace drone`
 - Or use the UI
-- **N.B. Under no circumstances call the drone server *drone-server* it will mess with the environment variables and prevent the server from starting
+- **N.B. Under no circumstances call the drone server *drone-server* it will mess with the environment variables and prevent the server from starting**
 
 ### Install drone runner(s)
 The drone server will delegate building tasks to an available runner, so we will need to create at least one
