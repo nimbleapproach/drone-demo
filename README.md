@@ -25,8 +25,8 @@ This is just a basic helloworld app with a docker build and an arbitrary test, w
 
 ### Create drone namespace
 Create a namespace in kubernetes where our drone service will live.
-- Assuming we've previously retrieved the config for kubectl (see **Install kubectl** in the Argo [README](https://github.com/nimbleapproach/argo-demo/blob/main/README.md)
-- `kubectl create drone`
+- Assuming we've previously retrieved the config for kubectl (see **Install kubectl** in the Argo [README](https://github.com/nimbleapproach/argo-demo/blob/main/README.md))
+- `kubectl create namespace drone`
 
 ### Create drone secrets in kubernetes
 We'll use kubernetes secrets to store sensitive information (like the OAuth client info above) other methods are available, but this is pretty straightfroward.
@@ -68,7 +68,8 @@ Do this to allow drone to log into your container registry and be able to push t
 - In Drone itself you will be taken to a settings page, as we'll be deploying to ACR the pipeline has been configured to get credentials from secrets.  So on the settings page select *Secrets* (The first link is secrets at the repo level, the second at the account level, have tested with the first but should work with the second and not have to keep reentering for all repos)
 - Add entry for acr_pass (password from the step above)
 - Add entry for acr_user (User ID from the step above)
-*We may be able to get the secrets from elsewhere but not sure how at this point)
+
+*We may be able to get the secrets from elsewhere but not sure how at this point)*
 
 ### Build a pipeline 
 - Within Drone, we can select the repo we want to build and select *New Build*, which naturally should start executing a new build
@@ -76,6 +77,7 @@ Do this to allow drone to log into your container registry and be able to push t
 - The behavour currently defined in the drone file is this:
 1. Run test on any event to any branch (commit etc.)
 2. If the event was a tag event run docker build and push the image to ACR (note it uses auto_tag which will generate the tag from the github tag)
+
 *We'll likely want to look at different pipeline for different branches, environments and so on*
 
 ## Things to look at
