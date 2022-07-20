@@ -1,0 +1,81 @@
+kind: pipeline
+type: kubernetes
+name: default
+
+steps:
+- name: test
+  image: node
+  commands:
+  - npm install
+  - npm test
+- name: gensedcommandsdev
+  image: alpine
+  shell: /bin/sh
+  commands: 
+  - echo IMAGE_TAG_SUFFIX=-SNAPSHOT >> .env
+  - echo SED_FILE=kustomizehelloworld/base/deployment.yaml >> .env
+  - echo SED_REPLACE="paulsregistry80.azurecr.io\\\\\\/node-test:" >> .env
+  when:
+    event:
+     - tag
+- name: gensedcommandsprod
+  image: alpine
+  shell: /bin/sh
+  commands: 
+  - echo IMAGE_TAG_SUFFIX="" >> .env
+  - echo SED_FILE=kustomizehelloworld/overlays/hw-prod/kustomization.yaml >> .env
+  - echo SED_REPLACE="newTag:" >> .env
+  when:
+    event:
+     - promote
+- name: dockerdev  
+  image: plugins/docker
+  settings:
+    registry: paulsregistry80.azurecr.io
+    username:
+      from_secret: acr_user
+    password:
+      from_secret: acr_pass
+    repo: paulsregistry80.azurecr.io/node-test
+    auto_tag: true
+    auto_tag_suffix: SNAPSHOT
+  when:
+    event:
+     - tag
+- name: dockerprod  
+  image: plugins/docker
+  settings:
+    registry: paulsregistry80.azurecr.io
+    username:
+      from_secret: acr_user
+    password:
+      from_secret: acr_pass
+    repo: paulsregistry80.azurecr.io/node-test
+    auto_tag: true
+  when:
+    event:
+     - promote
+- name: argo
+  image: alpine/git
+  shell: /bin/sh
+  commands:
+  - source .env
+  - cat .env
+  - SRC_DIR=$(pwd)
+  - git fetch --tags
+  - export IMAGE_TAG=$(git describe --tags)
+  - echo $IMAGE_TAG
+  - mkdir ../argo
+  - cd ../argo
+  - git clone https://github.com/paulpbrandon/argo-tests.git .
+  - echo "s/$SED_REPLACE.*/$SED_REPLACE$IMAGE_TAG$IMAGE_TAG_SUFFIX/g"
+  - sed -i -r "s/$SED_REPLACE([[:space:]]*).*/$SED_REPLACE\1$IMAGE_TAG$IMAGE_TAG_SUFFIX/g" "$SED_FILE"
+  - git add $SED_FILE
+  - git diff --cached
+  - git commit -m "Updated image version to $IMAGE_TAG"
+  - git push
+  - cd $SRC_DIR
+  when:
+    event:
+     - promote
+     - tag
