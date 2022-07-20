@@ -8,6 +8,10 @@ steps:
   commands:
   - npm install
   - npm test
+  when:
+    event:
+      exclude:
+        - promote
 - name: gensedcommandsdev
   image: alpine
   shell: /bin/sh
@@ -68,8 +72,9 @@ steps:
   - mkdir ../argo
   - cd ../argo
   - git clone https://github.com/paulpbrandon/argo-tests.git .
-  - echo "s/$SED_REPLACE.*/$SED_REPLACE$IMAGE_TAG$IMAGE_TAG_SUFFIX/g"
-  - sed -i -r "s/$SED_REPLACE([[:space:]]*).*/$SED_REPLACE\1$IMAGE_TAG$IMAGE_TAG_SUFFIX/g" "$SED_FILE"
+  - export SED_CMD="s/$SED_REPLACE([[:space:]]*).*/$SED_REPLACE\1$IMAGE_TAG$IMAGE_TAG_SUFFIX/g"
+  - echo "About to run sed command, $SED_CMD"
+  - sed -i -r "$SED_CMD" "$SED_FILE"
   - git add $SED_FILE
   - git diff --cached
   - git commit -m "Updated image version to $IMAGE_TAG"
