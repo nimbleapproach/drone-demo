@@ -82,7 +82,7 @@ Do this to allow drone to log into your container registry and be able to push t
 
 To address the above point, there is a second version of the helloworld app within the *kustomizeApp* folder in this repository that you may wish to try out. The pipeline in this file has steps for tag and promote, which will equate to dev and production for the purposes of this example. Additionally, the pipeline will update the the service definition associated with the application for Argo to then pick up and deploy. Steps as follows:
 1. Run test on any event to any branch (commit etc.)
-2. If the event was a tag event run docker build and push the image to ACR with SNAPSHOT suffic
+2. If the event was a tag event run docker build and push the image to ACR with SNAPSHOT suffix
 3. If event was tag, update the image used by the dev deployment to the one we just built
 4. If event was promote (done within drone), run docker build and push the image to ACR with github tag
 5. If event was promote, update the image used by the prod deployment to the one we just built
