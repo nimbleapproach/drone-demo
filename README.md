@@ -80,6 +80,13 @@ Do this to allow drone to log into your container registry and be able to push t
 
 *We'll likely want to look at different pipeline for different branches, environments and so on. I was interested in using GitHub environments to set deployment targets, however it requires an Enterprise account*
 
+To address the above point, there is a second version of the helloworld app within the *kustomizeApp* folder in this repository that you may wish to try out. The pipeline in this file has steps for tag and promote, which will equate to dev and production for the purposes of this example. Additionally, the pipeline will update the the service definition associated with the application for Argo to then pick up and deploy. Steps as follows:
+1. Run test on any event to any branch (commit etc.)
+2. If the event was a tag event run docker build and push the image to ACR with SNAPSHOT suffic
+3. If event was tag, update the image used by the dev deployment to the one we just built
+4. If event was promote (done within drone), run docker build and push the image to ACR with github tag
+5. If event was promote, update the image used by the prod deployment to the one we just built
+
 ## Things to look at
 ### TLS certificates
 The is an error in the server logs `2022/07/15 21:21:05 http: TLS handshake error from 10.244.0.1:33125: EOF` though it currently does not appear to be affecting anything, I believe this might be to do with using the self cert option when setting up the server with https, and we should look at using the certs with the kubernetes cluster.
