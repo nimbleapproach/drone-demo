@@ -69,30 +69,26 @@ Do this to allow drone to log into your container registry and be able to push t
 - Add entry for acr_pass (password from the step above)
 - Add entry for acr_user (User ID from the step above)
 
-*We may be able to get the secrets from elsewhere but not sure how at this point)*
+*We may be able to get the secrets from elsewhere but not sure how at this point*
 
 ### Build a pipeline 
 - Within Drone, we can select the repo we want to build and select *New Build*, which naturally should start executing a new build
-- Commiting or tagging in the repo should also trigger a build via the webhook, if this doesn't work it may come down to whether you're using https and if it is enabled, you can try it out with http instead)
-- The behavour currently defined in the drone file is this:
+- Committing or tagging in the repo should also trigger a build via the webhook, if this doesn't work it may come down to whether you're using https and if it is enabled, you can try it out with http instead)
+- The behaviour currently defined in the drone file is this:
 1. Run test on any event to any branch (commit etc.)
-2. If the event was a tag event run docker build and push the image to ACR (note it uses auto_tag which will generate the tag from the github tag)
+2. If the event was a tag event run docker build and push the image to ACR (note it uses auto_tag which will generate the tag from the GitHub tag)
 
 *We'll likely want to look at different pipeline for different branches, environments and so on. I was interested in using GitHub environments to set deployment targets, however it requires an Enterprise account*
 
-To address the above point, there is a second version of the helloworld app within the *kustomizeApp* folder in this repository that you may wish to try out. The pipeline in this file has steps for tag and promote, which will equate to dev and production for the purposes of this example. Additionally, the pipeline will update the the service definition associated with the application for Argo to then pick up and deploy. Steps as follows:
-1. Run test on any event to any branch (commit etc.)
-2. If the event was a tag event run docker build and push the image to ACR with SNAPSHOT suffix
-3. If event was tag, update the image used by the dev deployment to the one we just built
-4. If event was promote (done within drone), run docker build and push the image to ACR with github tag
-5. If event was promote, update the image used by the prod deployment to the one we just built
+To address the above point, there is a second version of the helloworld app within the *kustomizeApp* folder in this repository that you may wish to try out. 
+Please see the README in that directory.
 
 ## Things to look at
 ### TLS certificates
-The is an error in the server logs `2022/07/15 21:21:05 http: TLS handshake error from 10.244.0.1:33125: EOF` though it currently does not appear to be affecting anything, I believe this might be to do with using the self cert option when setting up the server with https, and we should look at using the certs with the kubernetes cluster.
+There is an error in the server logs `2022/07/15 21:21:05 http: TLS handshake error from 10.244.0.1:33125: EOF` though it currently does not appear to be affecting anything, I believe this might be to do with using the self cert option when setting up the server with https, and we should look at using the certs with the kubernetes cluster.
 
 ### Back drone with postgres
-By default drone spins up an embedded SqlLite database which it mounts to /data. However, it does support adding proper databases. This may be beneficial for sorting out problems with runners, as the data will be readily accessible, it is also an alternative to persisting the data via the volume claim.
+By default, drone spins up an embedded SqlLite database which it mounts to /data. However, it does support adding proper databases. This may be beneficial for sorting out problems with runners, as the data will be readily accessible, it is also an alternative to persisting the data via the volume claim.
 
 ### Autoscaling
 We would like to spin runners up and down depending on load. Drone has a Prometheus compatible metrics endpoint (https://docs.drone.io/server/metrics/) that has things like number of pending jobs. Ideally we could use these metrics in conjunction with autoscaling features within Kubernetes. First we would need to expose the metrics to Kubernetes. Apparently Azure has a Prometheus integration that does not require you to set it up, you just have to add a ConfigMap as per https://trstringer.com/collect-custom-aks-metrics/ (assuming monitoring is enabled). However, the metrics endpoint requires a token and I haven't found a way to add it via this route (yet, it seems to suggest needing to set tls config but not sure where). I tried adding the token as an access_token query param, which works in the browser, but remains unauthenticated when the metrics are collected. The logs for this are in the omsagent, example command `kubectl logs omsagent-rs-6c7ddbdf7b-jwtnh -n kube-system`. A fall back might be to add a proxy app that makes the call to metrics.

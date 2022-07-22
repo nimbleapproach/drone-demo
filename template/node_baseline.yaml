@@ -1,0 +1,78 @@
+kind: pipeline
+type: kubernetes
+name: default
+
+steps:
+  - name: test
+    image: node
+    commands:
+      - npm install
+      - npm test
+    when:
+      event:
+        exclude:
+          - promote
+  - name: gen_build_env_base
+    image: alpine/git
+    shell: /bin/sh
+    commands:
+      - git fetch --tags
+      - echo $(git describe --tags) > .tags
+    when:
+      event:
+        - promote
+        - tag
+  - name: gen_build_env_dev
+    image: alpine
+    shell: /bin/sh
+    commands:
+      - echo DEPLOYMENT_FILE={{ .input.deployment_file_dev }} >> .env
+      - echo SED_REPLACE="{{ .input.docker_registry }}\\\\\\/{{ .input.docker_container }}:" >> .env
+    when:
+      event:
+        - tag
+  - name: gen_build_env_prod
+    image: alpine
+    shell: /bin/sh
+    commands:
+      - echo DEPLOYMENT_FILE={{ .input.deployment_file_prod }} >> .env
+      - echo SED_REPLACE="newTag:" >> .env
+    when:
+      event:
+        - promote
+  - name: dockerdev
+    image: plugins/docker
+    settings:
+      registry: {{ .input.docker_registry }}
+      username:
+        from_secret: docker_user
+      password:
+        from_secret: docker_pass
+      repo: {{ .input.docker_registry }}/{{ .input.docker_container }}
+    when:
+      event:
+        - tag
+  - name: argo
+    image: alpine/git
+    shell: /bin/sh
+    commands:
+      - source .env
+      - cat .env
+      - export IMAGE_TAG=$(cat .tags)
+      - echo $IMAGE_TAG
+      - SRC_DIR=$(pwd)
+      - mkdir ../argo
+      - cd ../argo
+      - git clone {{ .input.argo_repo }} .
+      - export SED_CMD="s/$SED_REPLACE([[:space:]]*).*/$SED_REPLACE\1$IMAGE_TAG/g"
+      - echo "About to run sed command, $SED_CMD"
+      - sed -i -r "$SED_CMD" "$DEPLOYMENT_FILE"
+      - git add $DEPLOYMENT_FILE
+      - git diff --cached
+      - git commit -m "Updated image version to $IMAGE_TAG"
+      - git push
+      - cd $SRC_DIR
+    when:
+      event:
+        - promote
+        - tag
