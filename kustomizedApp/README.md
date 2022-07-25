@@ -34,7 +34,8 @@ This template requires the following parameters, most should be fairly self-expl
 - **docker_registry:** The container registry where the docker container will live 
 - **docker_container:** The name for the docker container
 
-### Additional Note
+### Additional Notes
 This pipeline uses the Organization secrets, docker_user and docker_pass to connect to ACR, which can be set via the UI or the drone CLI with:
 - `drone orgsecret add nimbleapproach docker_user abcd`
 *TODO look at using encrypted or external secrets*
+- If cloning this app it will be a good idea to change the container name and set the versions to 0 in the deployment yaml, otherwise the current pipeline will fail when it finds no changes to commit, though it will actually work as the image required will now be present
