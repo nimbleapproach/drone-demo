@@ -97,4 +97,4 @@ We would like to spin runners up and down depending on load. Drone has a Prometh
 # An array of Kubernetes services to scrape metrics from.
 kubernetes_services = ["http://drone-metrics-proxy.drone"]
 ```
-You can then go to the *Logs* section of your AKS cluster and do a find for "drone_pending_builds" or any of the other metrics, on the *InsightsMetrics* table, and you should find they are there. We can then look at how we might use these for Autoscaling, possible through KEDA and the App Insights Metrics trigger https://keda.sh/docs/2.7/scalers/azure-app-insights/ or Azure Monitor trigger https://keda.sh/docs/2.7/scalers/azure-monitor/
+You can then go to the *Logs* section of your AKS cluster and do a find for "drone_pending_builds" or any of the other metrics, on the *InsightsMetrics* table, and you should find they are there. We can then look at how we might use these for Autoscaling, possible through KEDA and the Log Analytics Trigger: https://keda.sh/docs/2.7/scalers/azure-log-analytics/ example here: https://eliorf.medium.com/the-easiest-way-to-implement-auto-scaling-per-http-request-in-your-aks-cluster-83d17479d4b5
